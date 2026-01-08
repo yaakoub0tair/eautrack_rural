@@ -1,0 +1,952 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>WaterTracker Dashboard Replica</title>
+
+  <!-- Urbanist (Figma uses Urbanist) -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Urbanist:wght@400;500;600;700&display=swap" rel="stylesheet">
+
+  <style>
+    :root{
+      --bg:#ffffff;
+      --ink:#000019;
+      --muted:rgba(0,0,0,.60);
+      --purple:#646FC6;         /* Figma primary [file:3] */
+      --purple-20:rgba(100,111,198,.20);
+      --card:#ffffff;
+      --stroke:rgba(0,0,0,.10);
+
+      --blue:#B1E5FC;
+      --lilac:#CABDFF;
+      --green:#B5E4CA;
+      --yellow:#FFE7BD;
+
+      --shadow-sm:0 0 44.4444px rgba(0,0,0,.08);              /* cards [file:3] */
+      --shadow-lg:0 4.18118px 83.6237px rgba(100,111,198,.24);/* chart card [file:3] */
+      --shadow-soft:0 0 83.62px rgba(100,111,198,.08);        /* mid cards [file:3] */
+
+      --r-sm:13.3333px;  /* small cards [file:3] */
+      --r-md:25.0871px;  /* large cards [file:3] */
+      --r-pill:60px;     /* pill controls [file:3] */
+
+      --sidebar-w:236px; /* sidebar frame approx [file:3] */
+      --container-w:1440px;
+    }
+
+    *{box-sizing:border-box}
+    body{
+      margin:0;
+      font-family:"Urbanist", system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
+      background:var(--bg);
+      color:#000;
+    }
+
+    /* ====== Page layout ====== */
+    .app{
+      width:min(var(--container-w), 100%);
+      margin:0 auto;
+      min-height:100vh;
+      display:flex;
+      background:#fff;
+    }
+
+    /* ====== Sidebar ====== */
+    .sidebar{
+      width:var(--sidebar-w);
+      border-right:1px solid var(--stroke); /* [file:3] */
+      padding:40px 18px;
+      position:sticky;
+      top:0;
+      height:100vh;
+      background:#fff;
+    }
+
+    .nav{
+      margin-top:40px;
+      display:flex;
+      flex-direction:column;
+      gap:18px;
+    }
+
+    .nav a{
+      height:40px;
+      display:flex;
+      align-items:center;
+      gap:12px;
+      padding:0 14px;
+      border-radius:13.3333px;
+      color:rgba(0,0,0,.65);
+      text-decoration:none;
+      font-weight:600;
+      font-size:20.89px; /* close to figma [file:3] */
+      letter-spacing:-0.02em;
+    }
+
+    .nav a .ico{
+      width:24px;height:24px;opacity:.8;
+      border-radius:6px;
+      display:grid;place-items:center;
+    }
+
+    .nav a.active{
+      background:var(--purple);   /* settings selected [file:3] */
+      color:#fff;
+    }
+
+    .nav a.active .ico{
+      filter:invert(1);
+      opacity:1;
+    }
+
+    .divider{
+      height:1px;
+      background:transparent;
+      margin:12px 0;
+    }
+
+    /* ====== Main ====== */
+    .main{
+      flex:1;
+      padding:32px 28px 60px;
+      position:relative;
+    }
+
+    /* Top logo */
+    .topbar{
+      display:flex;
+      justify-content:center;
+      align-items:center;
+      height:60px;
+      margin-top:6px;
+      margin-bottom:34px;
+    }
+
+    .brand{
+      display:flex;
+      align-items:center;
+      gap:10px;
+      font-weight:700;
+      font-size:32.89px;     /* [file:3] */
+      letter-spacing:-0.02em;
+      color:var(--purple);   /* [file:3] */
+    }
+    .drop{
+      width:33.33px;height:33.33px;
+      border-radius:16.6667px; /* [file:3] */
+      background:rgba(100,111,198,.12);
+      position:relative;
+    }
+    .drop:before{
+      content:"";
+      position:absolute;
+      inset:7px 10px 9px 10px;
+      border-radius:999px;
+      background:var(--purple);
+      clip-path:polygon(50% 0%, 70% 30%, 80% 50%, 70% 70%, 50% 100%, 30% 70%, 20% 50%, 30% 30%);
+      opacity:.9;
+    }
+
+    /* ====== KPI cards row ====== */
+    .kpis{
+      display:grid;
+      grid-template-columns:repeat(4, 277px);
+      gap:22px;
+      justify-content:start;
+      margin-left:0;
+      margin-bottom:24px;
+    }
+
+    .kpi{
+      height:138px;
+      border-radius:var(--r-sm);
+      background:#fff;
+      box-shadow:var(--shadow-sm); /* [file:3] */
+      position:relative;
+      overflow:hidden;
+    }
+
+    .kpi .badge{
+      position:absolute;
+      left:13.33px; top:13.33px;
+      width:20px;height:20px;
+      border-radius:10px;
+      display:grid;place-items:center;
+      background:var(--lilac);
+    }
+
+    .kpi:nth-child(2) .badge{ background:var(--blue); }
+    .kpi:nth-child(3) .badge{ background:var(--green); }
+    .kpi:nth-child(4) .badge{ background:var(--yellow); }
+
+    .kpi .grad{
+      position:absolute;
+      right:0; top:31px;
+      width:141px; height:70px;
+      background:linear-gradient(180deg, rgba(202,189,255,1) 0%, rgba(202,189,255,0) 77.22%);
+      opacity:.9;
+    }
+    .kpi:nth-child(2) .grad{ background:linear-gradient(180deg, rgba(177,229,252,1) 0%, rgba(177,229,252,0) 77.22%); }
+    .kpi:nth-child(3) .grad{ background:linear-gradient(180deg, rgba(181,228,202,1) 0%, rgba(181,228,202,0) 77.22%); }
+    .kpi:nth-child(4) .grad{ background:linear-gradient(180deg, rgba(255,231,189,1) 0%, rgba(255,231,189,0) 77.22%); }
+
+    .kpi .value{
+      position:absolute;
+      left:13px; top:40px;
+      font-weight:700;
+      font-size:38.67px; /* [file:3] */
+      letter-spacing:-0.02em;
+      color:var(--ink);
+    }
+    .kpi .label{
+      position:absolute;
+      left:13px; top:86px;
+      font-weight:500;
+      font-size:14.7775px; /* [file:3] */
+      letter-spacing:-0.02em;
+      color:rgba(0,0,0,.60); /* [file:3] */
+    }
+    .kpi .delta{
+      position:absolute;
+      right:18px; top:97px;
+      display:flex; align-items:center; gap:6px;
+      font-weight:500;
+      font-size:16.78px; /* [file:3] */
+      letter-spacing:-0.02em;
+      color:#2BB048; /* [file:3] */
+    }
+
+    /* ====== Two top panels ====== */
+    .top-panels{
+      display:grid;
+      grid-template-columns:528px 579px;
+      gap:44px;
+      align-items:start;
+      margin-top:10px;
+    }
+
+    .card{
+      background:#fff;
+      border-radius:25.09px; /* [file:3] */
+      box-shadow:var(--shadow-sm);
+      position:relative;
+    }
+
+    .card-title{
+      display:flex;
+      align-items:center;
+      gap:12.54px;
+      padding:25px 20px;
+      font-weight:600;
+      font-size:20.9059px; /* [file:3] */
+      letter-spacing:-0.02em;
+    }
+
+    .card-title .bar{
+      width:12.54px;height:33.45px;
+      background:var(--purple);
+      border-radius:4.18118px; /* [file:3] */
+    }
+
+    /* Pie card */
+    .pie-card{
+      height:465px;
+      padding-bottom:10px;
+    }
+    .pie-wrap{
+      display:grid;
+      grid-template-columns:320px 1fr;
+      gap:20px;
+      padding:10px 22px 0 22px;
+    }
+
+    .pie{
+      width:322px;
+      height:322px;
+      border-radius:50%;
+      background:
+        conic-gradient(
+          var(--lilac) 0 38%,
+          var(--green) 38% 54%,
+          var(--yellow) 54% 78%,
+          var(--blue) 78% 100%
+        );
+      position:relative;
+      margin-top:10px;
+    }
+
+    .legend{
+      padding-top:18px;
+      display:flex;
+      flex-direction:column;
+      gap:28px;
+      color:rgba(0,0,0,.60);
+      font-weight:500;
+      font-size:19.89px; /* [file:3] */
+      letter-spacing:-0.02em;
+    }
+
+    .legend .item{
+      display:flex;
+      align-items:center;
+      gap:10px;
+      position:relative;
+      padding-bottom:18px;
+    }
+    .legend .item:after{
+      content:"";
+      position:absolute;
+      left:0;
+      bottom:-10px;
+      width:194px;
+      height:1px;
+      background:rgba(0,0,0,.10); /* lines [file:3] */
+      opacity:.6;
+    }
+    .legend .dot{
+      width:5.56px;height:5.56px;border-radius:50%;
+      background:var(--lilac);
+    }
+    .legend .item:nth-child(2) .dot{ background:var(--green); }
+    .legend .item:nth-child(3) .dot{ background:var(--yellow); }
+    .legend .item:nth-child(4) .dot{ background:var(--blue); }
+    .legend .item:nth-child(4):after{ display:none; }
+
+    /* Bar chart card */
+    .bar-card{
+      height:456px;
+      box-shadow:var(--shadow-lg); /* [file:3] */
+      overflow:hidden;
+    }
+
+    .bar-card .controls{
+      position:absolute;
+      right:20px; top:25px;
+      height:50.17px;
+      width:111.36px;
+      border:1.0453px solid rgba(0,0,0,.10);
+      border-radius:25.0871px;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      gap:6px;
+      color:rgba(0,0,0,.60);
+      font-size:16.7247px;
+      font-weight:400;
+      letter-spacing:-0.02em;
+      background:#fff;
+    }
+
+    .bar-area{
+      padding:0 20px 18px 20px;
+      position:relative;
+    }
+
+    .gridlines{
+      position:absolute;
+      left:20px; right:20px;
+      top:75px; bottom:74px;
+      background:
+        repeating-linear-gradient(
+          to bottom,
+          rgba(0,0,0,.10) 0,
+          rgba(0,0,0,.10) 1px,
+          transparent 1px,
+          transparent 44px
+        );
+      opacity:.6; /* [file:3] */
+      pointer-events:none;
+    }
+
+    .bars{
+      position:relative;
+      margin-top:20px;
+      height:300px;
+      display:flex;
+      align-items:flex-end;
+      gap:44px;
+      padding-left:40px;
+      padding-right:20px;
+    }
+
+    .group{
+      width:66.9px;
+      display:flex;
+      gap:8.36px;
+      align-items:flex-end;
+    }
+
+    .target{
+      width:29.27px;
+      border-radius:8.36237px;
+      background:rgba(100,111,198,.10); /* [file:3] */
+      position:relative;
+      overflow:hidden;
+      height:220px;
+    }
+    .target > span{
+      position:absolute;
+      left:0; right:0; bottom:0;
+      background:var(--lilac);
+      height:140px;
+      border-radius:8.36237px;
+    }
+
+    .sales{
+      width:29.27px;
+      border-radius:8.36237px;
+      background:var(--green);
+      height:160px;
+    }
+
+    /* simple differences per group to mimic the image */
+    .g2 .target{ height:160px; } .g2 .target span{ height:80px; } .g2 .sales{ height:145px; }
+    .g3 .target{ height:280px; } .g3 .target span{ height:210px; } .g3 .sales{ height:55px; }
+    .g4 .target{ height:170px; } .g4 .target span{ height:140px; } .g4 .sales{ height:95px; }
+    .g5 .target{ height:235px; } .g5 .target span{ height:170px; } .g5 .sales{ height:120px; }
+
+    .tooltip{
+      position:absolute;
+      left:260px;
+      top:122px;
+      background:var(--ink);
+      color:#fff;
+      font-weight:600;
+      font-size:16.7247px;
+      padding:4.18118px 10.453px;
+      border-radius:4.18118px;
+    }
+    .tooltip:after{
+      content:"";
+      position:absolute;
+      right:-8px;
+      top:50%;
+      transform:translateY(-50%);
+      width:0;height:0;
+      border-top:8px solid transparent;
+      border-bottom:8px solid transparent;
+      border-left:8px solid var(--ink);
+    }
+
+    .legend-row{
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      gap:41.81px;
+      padding:12px 0 18px;
+      font-size:16.7247px;
+      font-weight:500;
+      letter-spacing:-0.02em;
+      color:#000;
+    }
+
+    .key{
+      display:flex; align-items:center; gap:8.36px;
+    }
+    .swatch{
+      width:26.13px; height:20.91px; border-radius:4.18118px;
+      background:#EFF0F8;
+    }
+    .key:nth-child(2) .swatch{ background:var(--lilac); }
+    .key:nth-child(3) .swatch{ background:var(--green); }
+
+    /* ====== Progress strip + % ====== */
+    .progress-wrap{
+      display:flex;
+      align-items:center;
+      justify-content:flex-end;
+      gap:18px;
+      margin-top:18px;
+      margin-bottom:18px;
+    }
+    .progress{
+      width:438px;
+      height:39px;
+      background:rgba(101,111,198,.35); /* [file:3] */
+      border-radius:3.33333px;
+      overflow:hidden;
+    }
+    .progress > span{
+      display:block;
+      height:100%;
+      width:72%;
+      background:var(--purple); /* [file:3] */
+      border-radius:3.33333px 0 0 3.33333px;
+    }
+    .pct{
+      width:81px;
+      text-align:left;
+    }
+    .pct .n{
+      font-weight:700;
+      font-size:26.6667px; /* [file:3] */
+      letter-spacing:-0.02em;
+      color:var(--ink);
+      line-height:1.1;
+    }
+    .pct .t{
+      font-weight:500;
+      font-size:8.88889px; /* [file:3] */
+      letter-spacing:-0.02em;
+      color:rgba(0,0,0,.60);
+    }
+
+    /* ====== Mid gradient section + 3 cards ====== */
+    .mid-gradient{
+      margin-top:26px;
+      height:501px;
+      border-radius:18px;
+      background:linear-gradient(180deg,
+        rgba(100,111,198,0) 0%,
+        rgba(61,68,122,.2) 25%,
+        rgba(74,82,147,.2) 75%,
+        rgba(48,54,96,0) 100%
+      ); /* [file:3] */
+      position:relative;
+      padding:80px 0 0;
+    }
+
+    .mid-cards{
+      display:flex;
+      gap:44px;
+      justify-content:center;
+      margin-top:40px;
+    }
+
+    .mini{
+      width:256px;
+      height:214px;
+      background:#fff;
+      border-radius:25px;
+      box-shadow:var(--shadow-soft); /* [file:3] */
+      position:relative;
+    }
+
+    .mini .iconbox{
+      width:108px;height:108px;
+      border-radius:12px;
+      position:absolute;
+      left:74px; top:19px;
+      background:linear-gradient(180deg, rgba(177,229,252,1) 0%, rgba(177,229,252,0) 77.22%);
+      display:grid; place-items:center;
+    }
+    .mini:nth-child(2) .iconbox{
+      background:linear-gradient(180deg, rgba(181,228,202,1) 0%, rgba(181,228,202,0) 77.22%);
+    }
+    .mini:nth-child(3) .iconbox{
+      background:linear-gradient(180deg, rgba(255,231,189,1) 0%, rgba(255,231,189,0) 77.22%);
+    }
+
+    .logo-dot{
+      width:54px;height:54px;border-radius:50%;
+      background:#111;
+      position:relative;
+    }
+    .logo-dot:before{
+      content:"";
+      position:absolute;
+      inset:14px 14px;
+      background:#fff;
+      border-radius:10px;
+      clip-path:polygon(50% 0, 100% 30%, 100% 70%, 50% 100%, 0 70%, 0 30%);
+      opacity:.95;
+    }
+
+    .pill{
+      position:absolute;
+      left:17px; top:140px;
+      width:221px; height:56px;
+      border-radius:60px;
+      background:rgba(255,255,255,.40); /* [file:3] */
+      border:1px solid rgba(0,0,0,.05);  /* [file:3] */
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      padding:6px 6px 6px 24px;
+      gap:24px;
+    }
+    .pill span{
+      font-weight:500;
+      font-size:18px; /* [file:3] */
+      letter-spacing:-0.02em;
+      color:#131735; /* [file:3] */
+    }
+    .pill .go{
+      width:44px;height:44px;border-radius:22px;
+      background:#F3F3F3;
+      display:grid;place-items:center;
+      color:#000;
+      font-size:18px;
+      font-weight:700;
+    }
+    .mini:nth-child(2) .pill{ width:188px; left:34px; padding-left:63px; }
+    .mini:nth-child(3) .pill{ width:170px; left:43px; padding-left:64px; }
+
+    .mid-text{
+      width:521px;
+      margin:0 auto;
+      margin-top:20px;
+      font-weight:500;
+      font-size:18px; /* [file:3] */
+      text-align:center;
+      letter-spacing:-0.02em;
+      color:rgba(19,23,53,.60); /* [file:3] */
+    }
+
+    .cta{
+      width:180px;
+      margin:28px auto 0;
+      height:56px;
+      border-radius:60px;
+      background:var(--purple); /* [file:3] */
+      border:1px solid rgba(0,0,0,.10);
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      padding:6px 6px 6px 24px;
+      color:#fff;
+      font-size:18px;
+      font-weight:500;
+      letter-spacing:-0.02em;
+    }
+    .cta .go{
+      width:44px;height:44px;border-radius:22px;
+      background:rgba(255,255,255,.08); /* [file:3] */
+      display:grid;place-items:center;
+      font-weight:700;
+    }
+
+    /* ====== Table card ====== */
+    .table-card{
+      margin-top:36px;
+      width:1151px;
+      max-width:100%;
+      border-radius:13.6667px; /* [file:3] */
+      box-shadow:0 0 45.5556px rgba(0,0,0,.08); /* [file:3] */
+      padding-bottom:20px;
+    }
+
+    .table-head{
+      background:#F6F6F6; /* [file:3] */
+      margin:0 15px;
+      border-radius:9.11111px;
+      height:77px;
+      display:grid;
+      grid-template-columns: 30px 180px 185px 160px 120px 150px 110px 140px;
+      align-items:center;
+      padding:0 14px;
+      color:rgba(0,0,0,.60);
+      font-size:17px; /* [file:3] */
+      letter-spacing:-0.02em;
+      font-weight:500;
+      gap:12px;
+    }
+
+    .row{
+      margin:0 15px;
+      height:78px;
+      display:grid;
+      grid-template-columns: 30px 180px 185px 160px 120px 150px 110px 140px;
+      align-items:center;
+      padding:0 14px;
+      gap:12px;
+      border-bottom:0.569444px solid rgba(0,0,0,.10); /* [file:3] */
+      font-size:17px;
+      letter-spacing:-0.02em;
+      font-weight:500;
+      color:#000;
+      background:#fff;
+    }
+
+    .chk{
+      width:9.11px;height:9.11px;
+      border:0.569444px solid #000; /* [file:3] */
+      border-radius:2.27778px; /* [file:3] */
+    }
+
+    .showmore{
+      width:136.36px;
+      height:50.17px;
+      border:1.0453px solid rgba(0,0,0,.10);
+      border-radius:25.0871px;
+      margin:24px auto 0;
+      display:flex; align-items:center; justify-content:center;
+      gap:8px;
+      color:rgba(0,0,0,.60);
+      font-size:16.7247px;
+      letter-spacing:-0.02em;
+      background:#fff;
+      font-weight:400;
+    }
+
+    /* Bottom KPI duplicates (as in screenshot) */
+    .kpis.bottom{
+      margin-top:46px;
+      grid-template-columns:repeat(3, 277px);
+    }
+
+    /* Responsive (keeps proportions, just stacks) */
+    @media (max-width: 1400px){
+      .kpis{ grid-template-columns:repeat(2, 277px); }
+      .top-panels{ grid-template-columns:1fr; }
+      .bar-card{ height:auto; }
+      .bars{ overflow:auto; }
+      .table-card{ width:100%; }
+    }
+    @media (max-width: 900px){
+      .app{ flex-direction:column; }
+      .sidebar{ position:relative; height:auto; width:100%; }
+      .main{ padding:20px; }
+      .kpis{ grid-template-columns:1fr; }
+      .pie-wrap{ grid-template-columns:1fr; }
+      .pie{ width:280px; height:280px; }
+      .mid-cards{ flex-direction:column; align-items:center; }
+    }
+  </style>
+</head>
+
+<body>
+  <div class="app">
+    <aside class="sidebar">
+      <div class="nav">
+        <a href="#">
+          <span class="ico">▦</span>
+          Dashboard
+        </a>
+        <a class="active" href="#">
+          <span class="ico">⚙</span>
+          Settings
+        </a>
+        <a href="#">
+          <span class="ico">⎋</span>
+          Logout
+        </a>
+      </div>
+    </aside>
+
+    <main class="main">
+      <div class="topbar">
+        <div class="brand">
+          <span class="drop" aria-hidden="true"></span>
+          <span>WaterTracker</span>
+        </div>
+      </div>
+
+      <section class="kpis">
+        <div class="kpi">
+          <div class="badge"></div>
+          <div class="grad"></div>
+          <div class="value">25K</div>
+          <div class="label">Total Shipment</div>
+          <div class="delta">▲ 5.2%</div>
+        </div>
+
+        <div class="kpi">
+          <div class="badge"></div>
+          <div class="grad"></div>
+          <div class="value">25K</div>
+          <div class="label">Total Shipment</div>
+          <div class="delta">▲ 5.2%</div>
+        </div>
+
+        <div class="kpi">
+          <div class="badge"></div>
+          <div class="grad"></div>
+          <div class="value">25K</div>
+          <div class="label">Total Shipment</div>
+          <div class="delta">▲ 5.2%</div>
+        </div>
+
+        <div class="kpi">
+          <div class="badge"></div>
+          <div class="grad"></div>
+          <div class="value">25K</div>
+          <div class="label">Total Shipment</div>
+          <div class="delta">▲ 5.2%</div>
+        </div>
+      </section>
+
+      <section class="top-panels">
+        <div class="card pie-card">
+          <div class="card-title">
+            <span class="bar"></span>
+            <span>Sales &amp; Purchase</span>
+          </div>
+
+          <div class="pie-wrap">
+            <div class="pie" aria-label="Pie chart"></div>
+
+            <div class="legend">
+              <div class="item"><span class="dot"></span> Electronics</div>
+              <div class="item"><span class="dot"></span> Clothing</div>
+              <div class="item"><span class="dot"></span> Auto Spare parts</div>
+              <div class="item"><span class="dot"></span> Footwear</div>
+            </div>
+          </div>
+        </div>
+
+        <div>
+          <div class="progress-wrap">
+            <div class="progress"><span></span></div>
+            <div class="pct">
+              <div class="n">82%</div>
+              <div class="t">Completed</div>
+            </div>
+          </div>
+
+          <div class="card bar-card">
+            <div class="card-title">
+              <span class="bar"></span>
+              <span>Sales &amp; Purchase</span>
+            </div>
+
+            <div class="controls">Monthly ▾</div>
+
+            <div class="bar-area">
+              <div class="gridlines"></div>
+              <div class="tooltip">$60K</div>
+
+              <div class="bars">
+                <div class="group g1">
+                  <div class="target"><span></span></div>
+                  <div class="sales"></div>
+                </div>
+                <div class="group g2">
+                  <div class="target"><span></span></div>
+                  <div class="sales"></div>
+                </div>
+                <div class="group g3">
+                  <div class="target"><span></span></div>
+                  <div class="sales"></div>
+                </div>
+                <div class="group g4">
+                  <div class="target"><span></span></div>
+                  <div class="sales"></div>
+                </div>
+                <div class="group g5">
+                  <div class="target"><span></span></div>
+                  <div class="sales"></div>
+                </div>
+              </div>
+
+              <div class="legend-row">
+                <div class="key"><span class="swatch"></span> Sales Target</div>
+                <div class="key"><span class="swatch"></span> Sales</div>
+                <div class="key"><span class="swatch"></span> Purchases</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section class="mid-gradient">
+        <p class="mid-text">
+          Ship X delivers smart and efficient logistics solutions, combining technology and expertise to simplify global shipping for businesses
+        </p>
+
+        <div class="mid-cards">
+          <div class="mini">
+            <div class="iconbox"><div class="logo-dot"></div></div>
+            <div class="pill"><span>Type Of Activity</span><div class="go">→</div></div>
+          </div>
+
+          <div class="mini">
+            <div class="iconbox"><div class="logo-dot"></div></div>
+            <div class="pill"><span>Volume</span><div class="go">→</div></div>
+          </div>
+
+          <div class="mini">
+            <div class="iconbox"><div class="logo-dot"></div></div>
+            <div class="pill"><span>Time</span><div class="go">→</div></div>
+          </div>
+        </div>
+
+        <div class="cta">
+          <span>Contact us</span>
+          <span class="go">→</span>
+        </div>
+      </section>
+
+      <section class="card table-card">
+        <div class="card-title" style="padding-left:27px;">
+          <span class="bar"></span>
+          <span>Sales &amp; Purchase</span>
+        </div>
+
+        <div class="table-head">
+          <div class="chk"></div>
+          <div>Transaction date</div>
+          <div>Warehouse name</div>
+          <div>Product name</div>
+          <div>Quantity</div>
+          <div>Transaction</div>
+          <div>Source</div>
+          <div>Operator</div>
+        </div>
+
+        <div class="row">
+          <div class="chk"></div>
+          <div>08-04-25</div>
+          <div>Stacko</div>
+          <div>Boxed Monitors</div>
+          <div>45 units</div>
+          <div>Inbound</div>
+          <div>Techvia</div>
+          <div>Luca Romano</div>
+        </div>
+
+        <div class="row">
+          <div class="chk"></div>
+          <div>06-04-25</div>
+          <div>Dockly</div>
+          <div>Keyboard Sets</div>
+          <div>80 units</div>
+          <div>Outbound</div>
+          <div>Shipzy</div>
+          <div>Jinwoo Park</div>
+        </div>
+
+        <div class="row" style="border-bottom:0;">
+          <div class="chk"></div>
+          <div>05-04-25</div>
+          <div>Holdex</div>
+          <div>Laptop Bags</div>
+          <div>64 units</div>
+          <div>Internal Transfer</div>
+          <div>Partsly</div>
+          <div>Henrik Olsen</div>
+        </div>
+
+        <div class="showmore">Show More ▾</div>
+      </section>
+
+      <section class="kpis bottom">
+        <div class="kpi">
+          <div class="badge"></div>
+          <div class="grad"></div>
+          <div class="value">25K</div>
+          <div class="label">Total Shipment</div>
+          <div class="delta">▲ 5.2%</div>
+        </div>
+        <div class="kpi">
+          <div class="badge"></div>
+          <div class="grad"></div>
+          <div class="value">25K</div>
+          <div class="label">Total Shipment</div>
+          <div class="delta">▲ 5.2%</div>
+        </div>
+        <div class="kpi">
+          <div class="badge"></div>
+          <div class="grad"></div>
+          <div class="value">25K</div>
+          <div class="label">Total Shipment</div>
+          <div class="delta">▲ 5.2%</div>
+        </div>
+      </section>
+    </main>
+  </div>
+</body>
+</html>
